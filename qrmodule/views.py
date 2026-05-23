@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from bookings.models import Booking
+from payments.models import Payment
 
 from .models import QRCode
 from .serializers import QRCodeSerializer
@@ -31,13 +32,16 @@ class GenerateQRCodeView(APIView):
                 "error": "Booking not found"
             })
 
-        qr_data = f"""
-        Booking ID: {booking.id}
-        User: {booking.user.username}
-        Slot: {booking.slot.slot_number}
-        Hours: {booking.hours}
-        Amount: {booking.amount}
-        """
+        try:
+            payment = Payment.objects.get(booking=booking)
+
+        except Payment.DoesNotExist:
+
+            return Response({
+                "error": "Payment not found"
+            })
+
+        qr_data = payment.payment_link
 
         qr = qrcode.make(qr_data)
 
