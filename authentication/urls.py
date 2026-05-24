@@ -7,3 +7,4 @@ urlpatterns = [
     path('protected/', ProtectedView.as_view(), name='protected'),
     path('profile/', ProfileView.as_view(), name='profile'),
 ]
+print("AUTH URLS LOADED")

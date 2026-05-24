@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { login } from "../auth";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
@@ -11,12 +11,21 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    const success = await login(email, password);
+    try {
+      const res = await axios.post("http://127.0.0.1:8000/api/auth/login/", {
+        email: email,
+        password: password,
+      });
 
-    if (success) {
+      // store JWT tokens
+      localStorage.setItem("access", res.data.access);
+      localStorage.setItem("refresh", res.data.refresh);
+
       alert("Login Success");
       navigate("/dashboard");
-    } else {
+
+    } catch (error) {
+      console.log(error.response?.data);
       alert("Invalid Email or Password");
     }
   };
@@ -28,11 +37,12 @@ function Login() {
 
         <form onSubmit={handleLogin}>
           <input
-            type="text"
-            placeholder="Username"
+            type="email"
+            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             style={styles.input}
+            required
           />
 
           <input
@@ -41,6 +51,7 @@ function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             style={styles.input}
+            required
           />
 
           <button type="submit" style={styles.button}>
@@ -48,7 +59,10 @@ function Login() {
           </button>
         </form>
 
-       
+        {/* REGISTER LINK */}
+        <p style={styles.link} onClick={() => navigate("/register")}>
+          Don’t have an account? Register
+        </p>
       </div>
     </div>
   );
@@ -98,5 +112,7 @@ const styles = {
     textAlign: "center",
     color: "#2563eb",
     cursor: "pointer",
+    textDecoration: "underline",
+    fontWeight: "500",
   },
 };

@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'bookings',
     'payments',
     'qrmodule',
+    'django_extensions',
 ]
 
 # MIDDLEWARE (IMPORTANT ORDER)
@@ -110,4 +111,4 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 # CORS SETTINGS (🔥 IMPORTANT FIX)
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False

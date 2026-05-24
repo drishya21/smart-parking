@@ -8,9 +8,17 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
+
+        {/* LOGIN PAGE */}
+        <Route path="/login" element={<Login />} />
+
+        {/* REGISTER PAGE */}
         <Route path="/register" element={<Register />} />
 
+        {/* DEFAULT ROUTE → LOGIN */}
+        <Route path="/" element={<Login />} />
+
+        {/* DASHBOARD (PROTECTED) */}
         <Route
           path="/dashboard"
           element={
@@ -19,6 +27,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
       </Routes>
     </BrowserRouter>
   );

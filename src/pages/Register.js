@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 function Register() {
@@ -6,17 +7,24 @@ function Register() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
-    // SAVE USER (THIS IS WHERE YOUR LINE GOES)
-    localStorage.setItem(
-      "user",
-      JSON.stringify({ email, password })
-    );
+    try {
+      const res = await axios.post("http://127.0.0.1:8000/api/auth/register/", {
+        email: email,
+        password: password,
+      });
 
-    alert("Registered successfully");
-    navigate("/");
+      alert("Registered successfully");
+      console.log(res.data);
+
+      navigate("/login"); // go to login page after register
+
+    } catch (error) {
+      console.log(error.response?.data);
+      alert("Registration failed");
+    }
   };
 
   return (
@@ -30,6 +38,7 @@ function Register() {
             placeholder="Email"
             onChange={(e) => setEmail(e.target.value)}
             style={styles.input}
+            required
           />
 
           <input
@@ -37,6 +46,7 @@ function Register() {
             placeholder="Password"
             onChange={(e) => setPassword(e.target.value)}
             style={styles.input}
+            required
           />
 
           <button type="submit" style={styles.button}>
@@ -44,7 +54,7 @@ function Register() {
           </button>
         </form>
 
-        <p onClick={() => navigate("/")} style={styles.link}>
+        <p onClick={() => navigate("/login")} style={styles.link}>
           Already have an account? Login
         </p>
       </div>
