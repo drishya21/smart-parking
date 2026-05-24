@@ -1,5 +1,5 @@
 import qrcode
-
+import json
 from io import BytesIO
 
 from django.core.files import File
@@ -41,7 +41,12 @@ class GenerateQRCodeView(APIView):
                 "error": "Payment not found"
             })
 
-        qr_data = payment.payment_link
+        qr_data = json.dumps({
+    "booking_id": booking.id,
+    "user": booking.user.username,
+    "slot": booking.slot.slot_number,
+    "payment_link": payment.payment_link
+})
 
         qr = qrcode.make(qr_data)
 
@@ -59,4 +64,15 @@ class GenerateQRCodeView(APIView):
 
         serializer = QRCodeSerializer(qr_code)
 
-        return Response(serializer.data)
+        return  Response({
+    "qr": serializer.data,
+    "booking": {
+        "id": booking.id,
+        "slot": booking.slot.slot_number,
+        "user": booking.user.username,
+        "booked_at": booking.booked_at
+    },
+    "payment": {
+        "payment_link": payment.payment_link
+    }
+})
