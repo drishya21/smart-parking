@@ -11,83 +11,111 @@ function Dashboard() {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [hours, setHours] = useState(1);
   const [bookingDone, setBookingDone] = useState(false);
-  const [bookingHistory, setBookingHistory] = useState([]);
 
   const pricePerHour = 50;
 
-  // FETCH SLOT DATA
+  // TOKEN
+  const getHeaders = () => {
+    const token = localStorage.getItem("access");
+
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+  };
+
+  // FETCH SLOTS
   const fetchSlots = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/slots"
+        "http://127.0.0.1:8000/api/slots/",
+        getHeaders()
       );
 
       setSlots(res.data);
-
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      console.log(err.response?.data || err.message);
     }
   };
 
-  // REAL TIME UPDATE
   useEffect(() => {
     fetchSlots();
-
-    const interval = setInterval(() => {
-      fetchSlots();
-    }, 3000);
-
-    return () => clearInterval(interval);
-
   }, []);
 
-  // SLOT SELECT
+  // SELECT SLOT
   const handleSelect = (slot) => {
-    if (slot.status === "booked") {
-      alert("Slot already booked!");
+    if (slot.is_occupied) {
+      alert("Slot already booked");
       return;
     }
 
-    setSelectedSlot(slot.id);
+    setSelectedSlot(slot.slot_number);
   };
-
-  const totalAmount = hours * pricePerHour;
 
   // PAYMENT
   const handlePayment = async () => {
     if (!selectedSlot) {
-      alert("Please select a slot");
+      alert("Select a slot");
       return;
     }
 
+    const totalAmount = hours * pricePerHour;
+
     try {
-      await axios.post(
-        "http://localhost:5000/book-slot",
+      // CREATE RAZORPAY ORDER
+      const orderRes = await axios.post(
+        "http://127.0.0.1:8000/api/create-order/",
         {
-          slotId: selectedSlot,
-        }
+          amount: totalAmount,
+        },
+        getHeaders()
       );
 
-      fetchSlots();
+      const order = orderRes.data;
 
-      const newBooking = {
-        slot: selectedSlot,
-        hours,
-        amount: totalAmount,
-        date: new Date().toLocaleString(),
+      const options = {
+        key: "rzp_test_SsGr4sHvnfHvAn",
+
+        amount: order.amount,
+
+        currency: order.currency,
+
+        name: "Smart Parking",
+
+        description: "Parking Booking Payment",
+
+        order_id: order.id,
+
+        handler: async function () {
+          // BOOK SLOT AFTER PAYMENT SUCCESS
+
+          await axios.post(
+            "http://127.0.0.1:8000/api/book-slot/",
+            {
+              slot_number: selectedSlot,
+            },
+            getHeaders()
+          );
+
+          fetchSlots();
+
+          setBookingDone(true);
+
+          alert("Payment Successful & Slot Booked");
+        },
+
+        theme: {
+          color: "#2563eb",
+        },
       };
 
-      setBookingHistory([
-        ...bookingHistory,
-        newBooking,
-      ]);
+      const razor = new window.Razorpay(options);
 
-      setBookingDone(true);
+      razor.open();
 
-      alert("Payment Successful ✅");
-
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      console.log(err.response?.data || err.message);
     }
   };
 
@@ -97,33 +125,19 @@ function Dashboard() {
     navigate("/");
   };
 
-  // QR DATA
-  const qrData = `
-    Smart Parking Booking
-    Slot: ${selectedSlot}
-    Hours: ${hours}
-    Amount: ₹${totalAmount}
-  `;
+  const total = hours * pricePerHour;
 
   return (
-    <div style={styles.container}>
-
-      {/* HEADER */}
+    <div style={styles.page}>
       <div style={styles.header}>
-        <h1>🚗 Smart Parking System</h1>
+        <h2>🚗 Smart Parking</h2>
 
-        <button
-          onClick={handleLogout}
-          style={styles.logout}
-        >
+        <button onClick={handleLogout} style={styles.logoutBtn}>
           Logout
         </button>
       </div>
 
-      {/* SLOT SECTION */}
-      <h2 style={styles.sectionTitle}>
-        Available Parking Slots
-      </h2>
+      <h3>Parking Slots</h3>
 
       <div style={styles.grid}>
         {slots.map((slot) => (
@@ -132,40 +146,36 @@ function Dashboard() {
             onClick={() => handleSelect(slot)}
             style={{
               ...styles.slot,
-
-              backgroundColor:
-                slot.status === "available"
-                  ? "#16a34a"
-                  : "#dc2626",
+              backgroundColor: slot.is_occupied
+                ? "#ef4444"
+                : "#22c55e",
 
               border:
-                selectedSlot === slot.id
+                selectedSlot === slot.slot_number
                   ? "4px solid yellow"
                   : "none",
             }}
           >
-            <h3>{slot.id}</h3>
-            <p>{slot.status}</p>
+            <h3>{slot.slot_number}</h3>
+
+            <p>
+              {slot.is_occupied ? "Booked" : "Available"}
+            </p>
           </div>
         ))}
       </div>
 
-      {/* PAYMENT BOX */}
-      <div style={styles.paymentBox}>
-        <h2>Booking Details</h2>
+      <div style={styles.panel}>
+        <h3>Booking Panel</h3>
 
         <p>
-          <strong>Selected Slot:</strong>{" "}
-          {selectedSlot || "None"}
+          Selected Slot:
+          <b> {selectedSlot || "None"} </b>
         </p>
-
-        <label>Select Hours</label>
 
         <select
           value={hours}
-          onChange={(e) =>
-            setHours(Number(e.target.value))
-          }
+          onChange={(e) => setHours(Number(e.target.value))}
           style={styles.select}
         >
           <option value={1}>1 Hour</option>
@@ -174,9 +184,7 @@ function Dashboard() {
           <option value={4}>4 Hours</option>
         </select>
 
-        <h2 style={{ marginTop: "20px" }}>
-          Total: ₹{totalAmount}
-        </h2>
+        <h2>Total ₹{total}</h2>
 
         <button
           onClick={handlePayment}
@@ -185,58 +193,13 @@ function Dashboard() {
           Pay Now
         </button>
 
-        {/* QR */}
         {bookingDone && (
-          <div style={styles.qrBox}>
-            <h3>Booking Confirmed ✅</h3>
-
+          <div style={{ marginTop: 20 }}>
             <QRCodeCanvas
-              value={qrData}
+              value={`Slot:${selectedSlot}`}
               size={180}
             />
-
-            <p>
-              Show this QR at parking entry
-            </p>
           </div>
-        )}
-      </div>
-
-      {/* BOOKING HISTORY */}
-      <div style={styles.historyBox}>
-        <h2>Booking History 📜</h2>
-
-        {bookingHistory.length === 0 ? (
-          <p>No bookings yet</p>
-        ) : (
-          bookingHistory.map(
-            (booking, index) => (
-              <div
-                key={index}
-                style={styles.historyCard}
-              >
-                <p>
-                  <strong>Slot:</strong>{" "}
-                  {booking.slot}
-                </p>
-
-                <p>
-                  <strong>Hours:</strong>{" "}
-                  {booking.hours}
-                </p>
-
-                <p>
-                  <strong>Amount:</strong> ₹
-                  {booking.amount}
-                </p>
-
-                <p>
-                  <strong>Date:</strong>{" "}
-                  {booking.date}
-                </p>
-              </div>
-            )
-          )
         )}
       </div>
     </div>
@@ -245,12 +208,13 @@ function Dashboard() {
 
 export default Dashboard;
 
+// STYLES
+
 const styles = {
-  container: {
+  page: {
+    padding: 20,
     minHeight: "100vh",
-    padding: "30px",
-    background:
-      "linear-gradient(to right, #e0eafc, #cfdef3)",
+    background: "#f3f4f6",
     fontFamily: "Arial",
   },
 
@@ -258,92 +222,59 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: "30px",
+    background: "#111827",
+    color: "white",
+    padding: 15,
+    borderRadius: 10,
   },
 
-  sectionTitle: {
-    marginBottom: "20px",
+  logoutBtn: {
+    background: "red",
+    color: "white",
+    border: "none",
+    padding: "10px 15px",
+    borderRadius: 5,
+    cursor: "pointer",
   },
 
   grid: {
     display: "grid",
     gridTemplateColumns:
-      "repeat(auto-fit, minmax(120px, 1fr))",
-    gap: "15px",
+      "repeat(auto-fit,minmax(120px,1fr))",
+    gap: 15,
+    marginTop: 20,
   },
 
   slot: {
     color: "white",
-    padding: "25px",
-    borderRadius: "15px",
-    cursor: "pointer",
+    padding: 25,
+    borderRadius: 10,
     textAlign: "center",
-    fontWeight: "bold",
-    transition: "0.3s",
-    boxShadow:
-      "0 4px 10px rgba(0,0,0,0.2)",
+    cursor: "pointer",
   },
 
-  paymentBox: {
-    backgroundColor: "white",
-    marginTop: "40px",
-    padding: "30px",
-    borderRadius: "20px",
-    maxWidth: "400px",
-    marginInline: "auto",
-    boxShadow:
-      "0 4px 15px rgba(0,0,0,0.2)",
-    textAlign: "center",
+  panel: {
+    marginTop: 30,
+    background: "white",
+    padding: 25,
+    borderRadius: 10,
+    maxWidth: 400,
   },
 
   select: {
     width: "100%",
-    padding: "12px",
-    marginTop: "10px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
+    padding: 10,
+    marginTop: 10,
   },
 
   payBtn: {
     width: "100%",
-    marginTop: "20px",
-    padding: "14px",
-    backgroundColor: "#2563eb",
+    padding: 12,
+    marginTop: 15,
+    background: "#2563eb",
     color: "white",
     border: "none",
-    borderRadius: "10px",
+    borderRadius: 5,
     cursor: "pointer",
-    fontSize: "16px",
-    fontWeight: "bold",
-  },
-
-  qrBox: {
-    marginTop: "25px",
-  },
-
-  historyBox: {
-    marginTop: "50px",
-    textAlign: "center",
-  },
-
-  historyCard: {
-    backgroundColor: "white",
-    maxWidth: "350px",
-    margin: "15px auto",
-    padding: "20px",
-    borderRadius: "15px",
-    textAlign: "left",
-    boxShadow:
-      "0 4px 10px rgba(0,0,0,0.15)",
-  },
-
-  logout: {
-    padding: "12px 20px",
-    backgroundColor: "#111827",
-    color: "white",
-    border: "none",
-    borderRadius: "10px",
-    cursor: "pointer",
-    fontWeight: "bold",
   },
 };

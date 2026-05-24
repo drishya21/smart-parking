@@ -5,17 +5,19 @@ import { useNavigate } from "react-router-dom";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    const success = login(email, password);
+    const success = await login(email, password);
 
     if (success) {
+      alert("Login Success");
       navigate("/dashboard");
     } else {
-      alert("Login failed");
+      alert("Invalid Email or Password");
     }
   };
 
@@ -26,8 +28,9 @@ function Login() {
 
         <form onSubmit={handleLogin}>
           <input
-            type="email"
-            placeholder="Email"
+            type="text"
+            placeholder="Username"
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
             style={styles.input}
           />
@@ -35,6 +38,7 @@ function Login() {
           <input
             type="password"
             placeholder="Password"
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
             style={styles.input}
           />
@@ -44,9 +48,7 @@ function Login() {
           </button>
         </form>
 
-        <p onClick={() => navigate("/register")} style={styles.link}>
-          Register
-        </p>
+       
       </div>
     </div>
   );
@@ -60,36 +62,41 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     height: "100vh",
-    backgroundColor: "#f2f2f2",
+    backgroundColor: "#f3f4f6",
   },
 
   box: {
-    padding: "30px",
     backgroundColor: "white",
-    borderRadius: "10px",
-    boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-    width: "300px",
-    textAlign: "center",
+    padding: "40px",
+    borderRadius: "12px",
+    width: "320px",
+    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
   },
 
   input: {
     width: "100%",
-    padding: "10px",
-    margin: "10px 0",
+    padding: "12px",
+    marginTop: "15px",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
   },
 
   button: {
     width: "100%",
-    padding: "10px",
-    backgroundColor: "blue",
+    padding: "12px",
+    marginTop: "20px",
+    backgroundColor: "#2563eb",
     color: "white",
     border: "none",
+    borderRadius: "6px",
     cursor: "pointer",
+    fontWeight: "bold",
   },
 
   link: {
-    marginTop: "10px",
-    color: "blue",
+    marginTop: "15px",
+    textAlign: "center",
+    color: "#2563eb",
     cursor: "pointer",
   },
 };

@@ -1,10 +1,6 @@
 from django.urls import path
-from .views import CreateBookingView
+from .views import book_slot
 
 urlpatterns = [
-
-    path(
-        'book-slot/',
-        CreateBookingView.as_view()
-    ),
+    path('book-slot/', book_slot),
 ]
