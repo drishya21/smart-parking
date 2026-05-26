@@ -109,6 +109,7 @@ RAZORPAY_KEY_ID = 'rzp_test_SsGr4sHvnfHvAn'
 RAZORPAY_KEY_SECRET = 'tHVcsYaUMqhdIlYTlVrl0gMJ'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://your-vercel-link.vercel.app",
 ]
 # CORS SETTINGS (🔥 IMPORTANT FIX)
 CORS_ALLOW_ALL_ORIGINS = True
