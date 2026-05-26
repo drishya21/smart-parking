@@ -40,8 +40,8 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    fetchSlots();
-  }, []);
+  fetchSlots();
+}, [fetchSlots]);
 
   // SELECT SLOT
   const handleSelect = (slot) => {
