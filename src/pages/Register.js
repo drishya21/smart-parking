@@ -11,7 +11,7 @@ function Register() {
     e.preventDefault();
 
     try {
-      const res = await axios.post("https://smart-parking-dq5f.onrender.com", {
+      const res = await axios.post("https://smart-parking-dq5f.onrender.com/api/auth/register/", {
         email: email,
         password: password,
       });

@@ -29,7 +29,7 @@ function Dashboard() {
   const fetchSlots = async () => {
     try {
       const res = await axios.get(
-        "https://smart-parking-dq5f.onrender.com",
+        "https://smart-parking-dq5f.onrender.com/api/slots/",
         getHeaders()
       );
 
@@ -65,7 +65,7 @@ function Dashboard() {
     try {
       // CREATE RAZORPAY ORDER
       const orderRes = await axios.post(
-        "https://smart-parking-dq5f.onrender.com",
+        "https://smart-parking-dq5f.onrender.com/api/create-payment/",
         {
           amount: totalAmount,
         },
@@ -91,7 +91,7 @@ function Dashboard() {
           // BOOK SLOT AFTER PAYMENT SUCCESS
 
           await axios.post(
-            "https://smart-parking-dq5f.onrender.com",
+            "https://smart-parking-dq5f.onrender.com/api/book-slot/",
             {
               slot_number: selectedSlot,
             },

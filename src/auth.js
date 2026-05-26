@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "https://smart-parking-dq5f.onrender.com";
+const API_URL = "https://smart-parking-dq5f.onrender.com/api/auth/";
 
 export const login = async (email, password) => {
   try {
