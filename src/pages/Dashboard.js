@@ -65,7 +65,7 @@ function Dashboard() {
     try {
       // CREATE RAZORPAY ORDER
       const orderRes = await axios.post(
-        "https://smart-parking-dq5f.onrender.com/api/create-payment/",
+        "https://smart-parking-dq5f.onrender.com/api/create-order/",
         {
           amount: totalAmount,
         },
